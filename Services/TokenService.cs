@@ -1,4 +1,5 @@
-﻿using JwtApi.Model;
+﻿using JwtApi.Dtos;
+using JwtApi.Model;
 using JwtApi.Repositories.Interfaces;
 using JwtApi.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
@@ -19,10 +20,10 @@ namespace JwtApi.Services
             _userRepository = userRepository;
         }
 
-        public string GenerateToken(User user)
+        public string GenerateToken(LoginDto loginDto)
         {
-            var userDatabase = _userRepository.GetByUserName(user.UserName);
-            if( userDatabase == null || user.UserName != userDatabase.UserName || user.Password != userDatabase.Password)
+            var userDatabase = _userRepository.GetByUserName(loginDto.UserName);
+            if( userDatabase == null || loginDto.UserName != userDatabase.UserName || loginDto.Password != userDatabase.Password)
                 return string.Empty;
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty));
@@ -36,8 +37,8 @@ namespace JwtApi.Services
                 audience: audience,
                 claims: new[]
                 {
-                    new Claim(type: ClaimTypes.Name, user.UserName),
-                    new Claim(type: ClaimTypes.Role, user.Role)
+                    new Claim(type: ClaimTypes.Name, userDatabase.UserName),
+                    new Claim(type: ClaimTypes.Role, userDatabase.Role)
                 },
                 expires: DateTime.Now.AddHours(2),
                 signingCredentials: signinCredentials

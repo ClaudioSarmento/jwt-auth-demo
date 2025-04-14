@@ -2,6 +2,7 @@ using JwtApi.Repositories;
 using JwtApi.Repositories.Interfaces;
 using JwtApi.Services;
 using JwtApi.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Raven.Client.Documents;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,8 +13,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.TryAddScoped<IUserRepository, UserRepository>();
+builder.Services.TryAddScoped<IUserService, UserService>();
+builder.Services.TryAddScoped<ITokenService, TokenService>();
 
 var documentStore = new DocumentStore
 {
