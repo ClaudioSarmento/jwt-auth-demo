@@ -1,9 +1,11 @@
 ﻿using JwtApi.Model;
 using JwtApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JwtApi.Controllers
 {
+    [Authorize(Roles = "Manager")]
     public class UserController : Controller
     {
         private readonly IUserService _userService;

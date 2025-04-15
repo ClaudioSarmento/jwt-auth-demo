@@ -2,9 +2,12 @@ using JwtApi.Repositories;
 using JwtApi.Repositories.Interfaces;
 using JwtApi.Services;
 using JwtApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Raven.Client.Documents;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +16,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen(options =>
 {
+ 
     options.SwaggerDoc("v1", new OpenApiInfo()
     {
         Version = "v1",
@@ -47,7 +52,28 @@ builder.Services.AddSwaggerGen(options =>
         Array.Empty<string>()
         }
     });
+   
 });
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        };
+    });
+
 builder.Services.TryAddScoped<IUserRepository, UserRepository>();
 builder.Services.TryAddScoped<IUserService, UserService>();
 builder.Services.TryAddScoped<ITokenService, TokenService>();
@@ -70,6 +96,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
